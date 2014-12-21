@@ -4,11 +4,12 @@ using System;
 using System.IO.Ports;
 
 public class Controller : MonoBehaviour {
+
 	static SerialPort stream = new SerialPort("COM3", 115200);
 
 	string receivedDataSlider = "EMPTY";
 	string receivedDataButton = "EMPTY";
-	string receivedDataMotor = "EMPTY";
+	//string receivedDataMotor = "EMPTY";
 	string receivedDataAcc = "EMPTY";
 	string receivedDataBlow = "EMPTY";
 
@@ -28,6 +29,8 @@ public class Controller : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		if(!George.controllerPluggedIn)
+			gameObject.SetActive(false);
 		stream.Open();
 		Debug.Log("Serial Port opened.");
 	
