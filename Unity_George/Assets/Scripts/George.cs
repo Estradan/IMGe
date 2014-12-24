@@ -11,16 +11,19 @@ public class George : MonoBehaviour {
 	private float verticalScale, horizontalScale;
 	private float georgeWeight;
 	private float distToGround;
+	private bool powerSphere;
 
 
 	public GameObject Controller;
 	public float scaleFactor=2000f;
+	public float jumpHeight = 10f;
 	[Header("Speeds")]
-	public float PlayerSpeed = 5;
+	public float playerSpeed = 5;
 	public float rotationSpeed = 10;
 	[Header("Stability")]
 	public float stability = 0.3f;
 	public float stabilitySpeed = 2.0f;
+
 
 	// Use this for initialization
 	void Start () {
@@ -39,54 +42,87 @@ public class George : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		georgeWeight = transform.localScale.x * transform.localScale.y;
-		float amtToMove = Input.GetAxisRaw ("Horizontal") * PlayerSpeed;
+		float amtToMove = Input.GetAxisRaw ("Horizontal") * playerSpeed;
 		transform.Translate(Vector3.right * amtToMove * Time.deltaTime, Space.World);
 		if(controllerPluggedIn){
 			verticalScale = con.getSmoothSlider1()/scaleFactor;
 			horizontalScale = con.getSmoothSlider2()/scaleFactor;
 
-			if (con.getSmoothSlider1() / scaleFactor > 0.5){
-				transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
+			if(!powerSphere){
+				if (con.getSmoothSlider1() / scaleFactor > 0.5){
+					transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
+				}
+				if (con.getSmoothSlider2() / scaleFactor > 0.5){
+					transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
+				}
+				if(con.getUp() && IsGrounded()){
+					rigidbody.velocity = new Vector3(rigidbody.velocity.x,10 / georgeWeight,0);
+				}
+
+			} else {
+				if (con.getSmoothSlider1() / scaleFactor > 0.5){
+					transform.localScale = new Vector3(verticalScale, verticalScale, 1);
+				}
+				//Not sure whether we implement jump for the sphere or not
+				/*if(con.getUp() && IsGrounded()){
+					rigidbody.velocity = new Vector3(rigidbody.velocity.x, 10 / georgeWeight,0);
+				}*/
 			}
-			if (con.getSmoothSlider2() / scaleFactor > 0.5){
-				transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
-			}
-			if(con.getUp() && IsGrounded()){
-				rigidbody.velocity = new Vector3(0,10 / georgeWeight,0);
-			}
-		
 		
 		}
 		else{
-			//Todo: Limit
-			if (Input.GetKey(KeyCode.P) && transform.localScale.y < 20){
-				verticalScale += 0.1f;
-				transform.localScale = new Vector3(horizontalScale,verticalScale,1);
+			if(!powerSphere){
+				if (Input.GetKey(KeyCode.P) && transform.localScale.y < 20){
+					verticalScale += 0.1f;
+					transform.localScale = new Vector3(horizontalScale,verticalScale,1);
+				}
+				if (Input.GetKey (KeyCode.O)&& transform.localScale.y > 0.5){
+					verticalScale -= 0.1f;
+					transform.localScale = new Vector3(horizontalScale,verticalScale,1);
+				}
+				if (Input.GetKey (KeyCode.L) && transform.localScale.x < 20){
+					horizontalScale +=0.1f;
+					transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
+				}
+				if (Input.GetKey (KeyCode.K) && transform.localScale.x > 0.5){
+					horizontalScale -=0.1f;
+					transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
+				}
+				if (Input.GetKeyDown(KeyCode.Space) && IsGrounded()){
+					rigidbody.velocity = new Vector3(rigidbody.velocity.x,jumpHeight / georgeWeight,0);
+				}
+				if (Input.GetKey(KeyCode.U)){
+					rigidbody.AddTorque(0,0,rotationSpeed);
+				}
+				if (Input.GetKey(KeyCode.J)){
+					rigidbody.AddTorque(0,0,-rotationSpeed);
+				}
 			}
-			if (Input.GetKey (KeyCode.O)&& transform.localScale.y > 0.5){
-				verticalScale -= 0.1f;
-				transform.localScale = new Vector3(horizontalScale,verticalScale,1);
-			}
-			if (Input.GetKey (KeyCode.L) && transform.localScale.x < 20){
-				horizontalScale +=0.1f;
-				transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
-			}
-			if (Input.GetKey (KeyCode.K) && transform.localScale.x > 0.5){
-				horizontalScale -=0.1f;
-				transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
-			}
-			if (Input.GetKeyDown(KeyCode.Space) && IsGrounded()){
-				rigidbody.velocity = new Vector3(0,10 / georgeWeight,0);
-			}
-			if (Input.GetKey(KeyCode.U)){
-				rigidbody.AddTorque(0,0,rotationSpeed);
-			}
-			if (Input.GetKey(KeyCode.J)){
-				rigidbody.AddTorque(0,0,-rotationSpeed);
+			else {
+				if (Input.GetKey(KeyCode.P) && transform.localScale.x < 20){
+					verticalScale += 0.1f;
+					horizontalScale += 0.1f;
+					transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
+				}
+				if (Input.GetKey(KeyCode.O) && transform.localScale.x > 1){
+					verticalScale -= 0.1f;
+					horizontalScale -= 0.1f;
+					transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
+				}
+				if (Input.GetKey(KeyCode.U)){
+					rigidbody.AddForce(rotationSpeed,0,0);
+				}
+				if (Input.GetKey(KeyCode.J)){
+					rigidbody.AddForce(-rotationSpeed,0,0);
+				}
+				//Not sure yet whether we want to implement jump for the Sphere or not
+				if (Input.GetKeyDown(KeyCode.Space) && IsGrounded()){
+					rigidbody.velocity = new Vector3(rigidbody.velocity.x,jumpHeight / georgeWeight,0);
+				}
+
 			}
 		}
 		distToGround = collider.bounds.extents.y;
-
 		if (verticalScale > oldVerticalScale)
         {
             float positionJumping = Mathf.Cos(transform.localEulerAngles.z * Mathf.Deg2Rad );
@@ -105,13 +141,17 @@ public class George : MonoBehaviour {
 	}
 
 	void FixedUpdate () {
-		Vector3 predictedUp = Quaternion.AngleAxis(
-			rigidbody.angularVelocity.magnitude * Mathf.Rad2Deg * stability / stabilitySpeed,
-			rigidbody.angularVelocity
-			) * transform.up;
+		if(!powerSphere){
+			Vector3 predictedUp = Quaternion.AngleAxis(
+				rigidbody.angularVelocity.magnitude * Mathf.Rad2Deg * stability / stabilitySpeed,
+				rigidbody.angularVelocity
+				) * transform.up;
 		
-		Vector3 torqueVector = Vector3.Cross(predictedUp, Vector3.up);
-		rigidbody.AddTorque(torqueVector * stabilitySpeed * stabilitySpeed);
+			Vector3 torqueVector = Vector3.Cross(predictedUp, Vector3.up);
+			rigidbody.AddTorque(torqueVector * stabilitySpeed * stabilitySpeed);
+		}
+		//Increase Gravity only for George (Want faster GamePlay)
+		rigidbody.AddForce(0,-5,0);
 
 	}
 
@@ -119,4 +159,24 @@ public class George : MonoBehaviour {
 		return Physics.Raycast(transform.position, -Vector3.up, distToGround + 0.1f);
 	}
 
+	void OnTriggerEnter(Collider other){
+		if(other.gameObject.tag == "SpherePower" && !powerSphere){
+			Destroy(other.gameObject);
+			GameObject sphere = GameObject.FindGameObjectWithTag("SpherePower");
+			this.GetComponent<MeshFilter>().mesh = sphere.GetComponent<MeshFilter>().mesh;
+			Destroy (this.collider);
+			gameObject.AddComponent("SphereCollider");
+			horizontalScale = 1; verticalScale = 1;
+			powerSphere = true;
+		}
+		if(other.gameObject.tag == "CubePower" && powerSphere){
+			Destroy(other.gameObject);
+			GameObject square = GameObject.FindGameObjectWithTag("CubePower");
+			this.GetComponent<MeshFilter>().mesh = square.GetComponent<MeshFilter>().mesh;
+			Destroy (this.collider);
+			gameObject.AddComponent("BoxCollider");
+			horizontalScale = 1; verticalScale = 1;
+			powerSphere = false;
+		}
+	}
 }
