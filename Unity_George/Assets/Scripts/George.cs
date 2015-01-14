@@ -15,7 +15,7 @@ public class George : MonoBehaviour {
 
 
 	public GameObject Controller;
-	public float scaleFactor=2000f;
+	public float scaleFactor=1024f;
 	public float jumpHeight = 10f;
 	[Header("Speeds")]
 	public float playerSpeed = 5;
@@ -41,26 +41,35 @@ public class George : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		georgeWeight = transform.localScale.x * transform.localScale.y;
+		georgeWeight = 0.25f + Mathf.Sqrt(transform.localScale.x * transform.localScale.y);
 		float amtToMove = Input.GetAxisRaw ("Horizontal") * playerSpeed;
 		transform.Translate(Vector3.right * amtToMove * Time.deltaTime, Space.World);
 		if(controllerPluggedIn){
+            //Maximalwert Slider = 4095, maximalscale = 3.999
 			verticalScale = con.getSmoothSlider1()/scaleFactor;
 			horizontalScale = con.getSmoothSlider2()/scaleFactor;
 
 			if(!powerSphere){
-				if (con.getSmoothSlider1() / scaleFactor > 0.5){
-					transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
+                if (verticalScale < 0.5f){
+                    verticalScale = 0.5f;
+                } 
+                if (horizontalScale < 0.5f){
+                    horizontalScale = 0.5f;
 				}
-				if (con.getSmoothSlider2() / scaleFactor > 0.5){
-					transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
-				}
+                transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
 				if(con.getUp() && IsGrounded()){
 					rigidbody.velocity = new Vector3(rigidbody.velocity.x,10 / georgeWeight,0);
 				}
 
+                Quaternion rotation = new Quaternion(0,0,0,0);
+                //Maximalwert Potis = 4095, maximalroation = 360° pro Seite
+                float potLeft = con.getSmoothStick1();
+                float potRight = con.getSmoothStick2();
+                rotation.x = (potLeft + potRight - 4095) / 4095 * 360;
+                transform.rotation = rotation;
+
 			} else {
-				if (con.getSmoothSlider1() / scaleFactor > 0.5){
+				if (verticalScale > 0.5){
 					transform.localScale = new Vector3(verticalScale, verticalScale, 1);
 				}
 				//Not sure whether we implement jump for the sphere or not
@@ -72,7 +81,7 @@ public class George : MonoBehaviour {
 		}
 		else{
 			if(!powerSphere){
-				if (Input.GetKey(KeyCode.P) && transform.localScale.y < 20){
+				if (Input.GetKey(KeyCode.P) && transform.localScale.y < 4){
 					verticalScale += 0.1f;
 					transform.localScale = new Vector3(horizontalScale,verticalScale,1);
 				}
@@ -80,7 +89,7 @@ public class George : MonoBehaviour {
 					verticalScale -= 0.1f;
 					transform.localScale = new Vector3(horizontalScale,verticalScale,1);
 				}
-				if (Input.GetKey (KeyCode.L) && transform.localScale.x < 20){
+				if (Input.GetKey (KeyCode.L) && transform.localScale.x < 4){
 					horizontalScale +=0.1f;
 					transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
 				}
@@ -99,7 +108,7 @@ public class George : MonoBehaviour {
 				}
 			}
 			else {
-				if (Input.GetKey(KeyCode.P) && transform.localScale.x < 20){
+				if (Input.GetKey(KeyCode.P) && transform.localScale.x < 4){
 					verticalScale += 0.1f;
 					horizontalScale += 0.1f;
 					transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
