@@ -14,7 +14,6 @@ public class CameraScript : MonoBehaviour {
 
 		transform.position = new Vector3 (playerx, playery, playerz -20);
 
-	
 	}
 	
 	// Update is called once per frame
