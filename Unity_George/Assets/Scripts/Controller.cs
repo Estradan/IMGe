@@ -23,6 +23,7 @@ public class Controller : MonoBehaviour {
 	*/
 	private float state1 = 0, state2 = 0, state3 = 0, state4 = 0;
 	private bool left=false, up=false, right=false, down=false;
+	private bool leftOld=false, upOld=false, rightOld =false, downOld=false;
 	private float normX, normY, normZ;
 	private float blowvalue;
 
@@ -73,9 +74,9 @@ public class Controller : MonoBehaviour {
 			right = false;
 		}
 		if ((buttonVal & 512) != 0) {
-			right = true;
+			down = true;
 		} else {
-			right = false;
+			down = false;
 		}
 		if ((buttonVal & 256) != 0) {
 			up = true;
@@ -107,6 +108,9 @@ public class Controller : MonoBehaviour {
 		string[] blowArr = receivedDataBlow.Split (' ');
 		//Debug.Log (receivedDataBlow);
 		blowvalue = float.Parse(blowArr[1], System.Globalization.CultureInfo.InvariantCulture);
+
+
+		upOld = up; rightOld = right; leftOld = left; downOld = down;
 
 	}
 
@@ -194,6 +198,19 @@ public class Controller : MonoBehaviour {
 	public bool getLeft(){
 		return left;
 	}
+	public bool getUpUp(){
+		return upOld && !up;
+	}
+	public bool getRightUp(){
+		return rightOld && !right;
+	}
+	public bool getDownUp(){
+		return downOld && !down;
+	}
+	public bool getLeftUp(){
+		return leftOld && !left;
+	}
+
 	public float getXAxis(){
 		return normX;
 	}
