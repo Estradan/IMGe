@@ -19,6 +19,7 @@ public class George : MonoBehaviour {
 	public GameObject Controller;
 	public float scaleFactor=1024f;
 	public float jumpHeight = 10f;
+    public Transform spawnPoint;
 	[Header("Speeds")]
 	public float globalPlayerSpeed = 5;
 	public float playerSpeed;
@@ -70,22 +71,6 @@ public class George : MonoBehaviour {
 					rigidbody2D.velocity = new Vector3(rigidbody2D.velocity.x,10 / georgeWeight,0);
 				}
 
-                float rotation = 0;
-                //Maximalwert Potis = 4095, 1700-2300 keine rotation, 1000/3000 min/max rotation(10);
-                float potLeft = con.getSmoothStick1();
-                if (potLeft < 1000) potLeft = 1000;
-                if (potLeft > 3000) potLeft = 3000;
-                if (potLeft < 1700){
-                    rotation = (potLeft - 1700) / 700f;
-                }
-                else if (potLeft > 2300){
-                    rotation = (potLeft - 2300) / 700f;
-                }
-                if (rotation < 0.001 || rotation > 0.001){
-                    rigidbody2D.AddTorque(rotation * Time.deltaTime);
-                    rigidbody2D.angularDrag = 12;
-                }
-
 				if(con.getRight()){
 					rigidbody2D.velocity = new Vector2 (playerSpeed, rigidbody2D.velocity.y);
 				}
@@ -103,6 +88,34 @@ public class George : MonoBehaviour {
 				if (verticalScale > 0.5){
 					transform.localScale = new Vector3(verticalScale, verticalScale, transform.position.z);
 				}
+
+                if (con.getRight()){
+                    rigidbody2D.AddForce(new Vector2(rotationSpeed, 0));
+                }
+                if (con.getLeft())
+                {
+                    rigidbody2D.AddForce(new Vector2(-rotationSpeed, 0));
+                }
+
+                float rotation = 0;
+                //Maximalwert Potis = 4095, 1700-2300 keine rotation, 1000/3000 min/max rotation(10);
+                float potLeft = con.getSmoothStick1();
+                if (potLeft < 1000) potLeft = 1000;
+                if (potLeft > 3000) potLeft = 3000;
+                if (potLeft < 1700)
+                {
+                    rotation = (potLeft - 1700) / 700f;
+                }
+                else if (potLeft > 2300)
+                {
+                    rotation = (potLeft - 2300) / 700f;
+                }
+                if (rotation < 0.001 || rotation > 0.001)
+                {
+                    rigidbody2D.AddTorque(rotation * Time.deltaTime);
+                    rigidbody2D.angularDrag = 12;
+                }
+
 				//Not sure whether we implement jump for the sphere or not
 				/*if(con.getUp() && IsGrounded()){
 					rigidbody.velocity = new Vector3(rigidbody.velocity.x, 10 / georgeWeight,0);
@@ -258,6 +271,9 @@ public class George : MonoBehaviour {
 			gameObject.AddComponent("BoxCollider2D");
 			powerSphere = false;
 		}
+        if (other.gameObject.tag == "DeathZone"){
+            OnDeath();
+        }
 	}
 	float stay = 0.01f;
 	void OnTriggerStay2D(Collider2D other){
@@ -283,5 +299,19 @@ public class George : MonoBehaviour {
 		if (other.gameObject.tag == "WindBox")
 						playerSpeed = globalPlayerSpeed;
 		}
+
+    void OnDeath(){
+        Debug.Log("Dead");
+        gameObject.SetActive(false);
+
+        // reset the character's speed
+        rigidbody2D.velocity = new Vector2(0,0);
+
+        // reset the character's position to the spawnPoint
+        transform.position = spawnPoint.position;
+
+        gameObject.SetActive(true);
+
+    }
 
 }
