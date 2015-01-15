@@ -22,7 +22,7 @@ public class George : MonoBehaviour {
 	[Header("Speeds")]
 	public float globalPlayerSpeed = 5;
 	public float playerSpeed;
-	public float rotationSpeed = 10;
+	public float rotationSpeed = 1;
 	[Header("Stability")]
 	public float stability = 0.3f;
 	public float stabilitySpeed = 2.0f;
@@ -46,9 +46,10 @@ public class George : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		//Debug.Log (IsGrounded());
+        rigidbody2D.angularDrag = 3;
+        rigidbody2D.gravityScale = 0.5f;
 
-
-		georgeWeight = 0.25f + Mathf.Sqrt(transform.localScale.x * transform.localScale.y);
+		georgeWeight = (0.25f + Mathf.Sqrt(transform.localScale.x * transform.localScale.y)) * 1.5f;
 		//float amtToMove = Input.GetAxisRaw ("Horizontal") * playerSpeed;
 		//transform.Translate(Vector3.right * amtToMove * Time.deltaTime, Space.World);
 
@@ -69,12 +70,21 @@ public class George : MonoBehaviour {
 					rigidbody2D.velocity = new Vector3(rigidbody2D.velocity.x,10 / georgeWeight,0);
 				}
 
-                Quaternion rotation = new Quaternion(0,0,0,0);
-                //Maximalwert Potis = 4095, maximalroation = 360° pro Seite
+                float rotation = 0;
+                //Maximalwert Potis = 4095, 1700-2300 keine rotation, 1000/3000 min/max rotation(10);
                 float potLeft = con.getSmoothStick1();
-                float potRight = con.getSmoothStick2();
-                rotation.x = (potLeft + potRight - 4095) / 4095 * 360;
-                transform.rotation = rotation;
+                if (potLeft < 1000) potLeft = 1000;
+                if (potLeft > 3000) potLeft = 3000;
+                if (potLeft < 1700){
+                    rotation = (potLeft - 1700) / 700f;
+                }
+                else if (potLeft > 2300){
+                    rotation = (potLeft - 2300) / 700f;
+                }
+                if (rotation < 0.001 || rotation > 0.001){
+                    rigidbody2D.AddTorque(rotation * Time.deltaTime);
+                    rigidbody2D.angularDrag = 12;
+                }
 
 				if(con.getRight()){
 					rigidbody2D.velocity = new Vector2 (playerSpeed, rigidbody2D.velocity.y);
@@ -138,11 +148,13 @@ public class George : MonoBehaviour {
 				}
 				if (Input.GetKey(KeyCode.U)){
 					//rigidbody2D.velocity = new Vector2 (5, rigidbody2D.velocity.y);
-					rigidbody2D.AddTorque(rotationSpeed);
+                    rigidbody2D.AddTorque(rotationSpeed * Time.deltaTime);
+                    rigidbody2D.angularDrag = 12;
 				}
 
 				if (Input.GetKey(KeyCode.J)){
-					rigidbody2D.AddTorque(-rotationSpeed);
+                    rigidbody2D.AddTorque(-rotationSpeed * Time.deltaTime);
+                    rigidbody2D.angularDrag = 12;
 				}
 			}
 			else {
