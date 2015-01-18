@@ -28,6 +28,7 @@ public class George : MonoBehaviour {
 	public float stability = 0.3f;
 	public float stabilitySpeed = 2.0f;
 
+    private ArrayList objects;
 
 	// Use this for initialization
 	void Start () {
@@ -41,7 +42,7 @@ public class George : MonoBehaviour {
 		distToGround = collider2D.bounds.extents.y;
 		playerSpeed = globalPlayerSpeed;
 
-
+        objects = new ArrayList();
 	}
 	
 	// Update is called once per frame
@@ -183,11 +184,11 @@ public class George : MonoBehaviour {
 			}
 			else {//-------------------SPHERE---------------------
 				if (Input.GetKey(KeyCode.D)){
-					rigidbody2D.AddForce(new Vector2(playerSpeed*2*50* Time.deltaTime,0));
+					rigidbody2D.AddForce(new Vector2(playerSpeed*2,0));
 				}
 
 				if (Input.GetKey(KeyCode.A)){
-					rigidbody2D.AddForce(new Vector2(-playerSpeed*2*50* Time.deltaTime ,0));
+					rigidbody2D.AddForce(new Vector2(-playerSpeed*2,0));
 
 				}
 
@@ -202,11 +203,11 @@ public class George : MonoBehaviour {
 					transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
 				}
 				if (Input.GetKey(KeyCode.U)){
-					rigidbody2D.AddTorque(-rotationSpeed*50* Time.deltaTime);
+					rigidbody2D.AddTorque(-rotationSpeed);
 				}
 			
 				if (Input.GetKey(KeyCode.J)){
-					rigidbody2D.AddTorque(rotationSpeed*50* Time.deltaTime);
+					rigidbody2D.AddTorque(rotationSpeed);
 				}
 				//Not sure yet whether we want to implement jump for the Sphere or not
 				if (Input.GetKeyDown(KeyCode.Space) && IsGrounded()){
@@ -261,7 +262,6 @@ public class George : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D other){
 		if(other.gameObject.tag == "SpherePower" && !powerSphere){
-			Destroy(other.gameObject);
 			GameObject sphere = GameObject.FindGameObjectWithTag("SpherePower");
 			this.GetComponent<MeshFilter>().mesh = sphere.GetComponent<MeshFilter>().mesh;
 			this.renderer.material=sphere.renderer.material;
@@ -270,9 +270,10 @@ public class George : MonoBehaviour {
 			transform.localScale = new Vector3(1,1,1);
 			gameObject.AddComponent("CircleCollider2D");
 			powerSphere = true;
+            other.gameObject.SetActive(false);
+            objects.Add(other.gameObject);
 		}
 		if(other.gameObject.tag == "CubePower" && powerSphere){
-			Destroy(other.gameObject);
 			GameObject square = GameObject.FindGameObjectWithTag("CubePower");
 			this.GetComponent<MeshFilter>().mesh = square.GetComponent<MeshFilter>().mesh;
 			this.renderer.material=square.renderer.material;
@@ -281,6 +282,8 @@ public class George : MonoBehaviour {
 			transform.localScale = new Vector3(1,1,1);
 			gameObject.AddComponent("BoxCollider2D");
 			powerSphere = false;
+            other.gameObject.SetActive(false);
+            objects.Add(other.gameObject);
 		}
         if (other.gameObject.tag == "DeathZone"){
             OnDeath();
@@ -295,11 +298,11 @@ public class George : MonoBehaviour {
 
 				if (!powerSphere ) {
 					if (playerSpeed > 0 && transform.localScale.x * transform.localScale.y < 10){
-								playerSpeed -= stay;
-			}
-			else{
-			playerSpeed = globalPlayerSpeed;
-			}
+					    playerSpeed -= stay;
+		    	    }
+                    else if (transform.localScale.x * transform.localScale.y > 10){
+			            playerSpeed = globalPlayerSpeed;
+			        }
 				} 
 				if (powerSphere) {
 					//rigidbody2D.AddForce (new Vector2 (-17 , 0));
@@ -317,7 +320,7 @@ public class George : MonoBehaviour {
 
 	void OnTriggerExit2D(Collider2D other){
 		if (other.gameObject.tag == "WindBox")
-						playerSpeed = globalPlayerSpeed;
+			playerSpeed = globalPlayerSpeed;
 		}
 
     void OnDeath(){
@@ -330,6 +333,20 @@ public class George : MonoBehaviour {
         // reset the character's position to the spawnPoint
         transform.position = spawnPoint.position;
 
+        for (int i = 0; i < objects.Count; i++){
+            ((GameObject)objects[i]).SetActive(true);
+        }
+        objects.Clear();
+        if (!controllerPluggedIn) transform.localScale = new Vector3(1, 1, 1);
+
+        GameObject square = GameObject.FindGameObjectWithTag("CubePower");
+        this.GetComponent<MeshFilter>().mesh = square.GetComponent<MeshFilter>().mesh;
+        this.renderer.material = square.renderer.material;
+        Destroy(this.collider2D);
+        horizontalScale = 1; verticalScale = 1;
+        transform.localScale = new Vector3(1, 1, 1);
+        gameObject.AddComponent("BoxCollider2D");
+        powerSphere = false;
         gameObject.SetActive(true);
 
     }
