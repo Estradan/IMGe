@@ -27,8 +27,12 @@ public class George : MonoBehaviour {
 	[Header("Stability")]
 	public float stability = 0.3f;
 	public float stabilitySpeed = 2.0f;
+    [Header("GUI")]
+    public GUIStyle Label;
 
     private ArrayList objects;
+    private bool pause = false;
+    private Vector2 velocity = new Vector2();
 
 	// Use this for initialization
 	void Start () {
@@ -126,6 +130,22 @@ public class George : MonoBehaviour {
 
 		}
 	void Update () {
+        if (!controllerPluggedIn){
+            if (Input.GetKey(KeyCode.Escape)){
+                pause = true;
+                rigidbody2D.isKinematic = true;
+            }
+        }
+        else{
+            if (con.getPause()){
+                pause = true;
+                rigidbody2D.isKinematic = true;
+            }
+        }
+        if (pause) return;
+
+        velocity = rigidbody2D.velocity;
+
 		//Debug.Log (IsGrounded());
 		if (powerSphere) {
 			rigidbody2D.angularDrag = 2 / (transform.localScale.x * transform.localScale.y);
@@ -236,7 +256,6 @@ public class George : MonoBehaviour {
 
         oldVerticalScale = verticalScale;
 		oldHorizontalScale = horizontalScale;
-		Debug.Log (playerSpeed);
 	
 	}
 
@@ -351,4 +370,25 @@ public class George : MonoBehaviour {
 
     }
 
+    void OnGUI()
+    {
+        if (pause)
+        {
+            GUI.Box(new Rect(Screen.width / 2 - 90, Screen.height / 2 - 120, 180, 240), "");
+            GUI.Label(new Rect(Screen.width / 2 - 80, Screen.height / 2 - 108, 160, 50), "Pause", Label);
+            if (GUI.Button(new Rect(Screen.width / 2 - 80, Screen.height / 2 - 50, 160, 50), "Back to Game")){
+                pause = false;
+                rigidbody2D.isKinematic = false;
+                rigidbody2D.velocity = velocity;
+            }
+            if (GUI.Button(new Rect(Screen.width / 2 - 80, Screen.height / 2 + 5, 160, 50), "Restart")){
+                OnDeath();
+                pause = false;
+                rigidbody2D.isKinematic = false;
+            }
+            if (GUI.Button(new Rect(Screen.width / 2 - 80, Screen.height / 2 + 60, 160, 50), "Exit")){
+                Application.Quit();
+            }
+        }
+    }
 }

@@ -24,6 +24,7 @@ public class Controller : MonoBehaviour {
 	private float state1 = 0, state2 = 0, state3 = 0, state4 = 0;
 	private bool left=false, up=false, right=false, down=false;
 	private bool leftOld=false, upOld=false, rightOld =false, downOld=false;
+    private bool pauseButton = false;
 	private float normX, normY, normZ;
 	private float blowvalue;
 
@@ -83,6 +84,12 @@ public class Controller : MonoBehaviour {
 		} else {
 			up = false;
 		}
+        if ((buttonVal & 1024) != 0){
+            pauseButton = true;
+        }
+        else{
+            pauseButton = false;
+        }
 	
 		stream.Write ("a");
 		receivedDataAcc = stream.ReadLine ();
@@ -210,6 +217,9 @@ public class Controller : MonoBehaviour {
 	public bool getLeftUp(){
 		return leftOld && !left;
 	}
+    public bool getPause(){
+        return pauseButton;
+    }
 
 	public float getXAxis(){
 		return normX;
