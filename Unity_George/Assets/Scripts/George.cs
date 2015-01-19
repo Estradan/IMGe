@@ -13,7 +13,7 @@ public class George : MonoBehaviour {
 	private float distToGround;
 	private bool powerSphere;
 	private bool leftOld=false, rightOld =false;
-
+	private bool rotatedDirection;
 
 
 	public GameObject Controller;
@@ -30,12 +30,13 @@ public class George : MonoBehaviour {
     [Header("GUI")]
     public GUIStyle Label;
 
-    private ArrayList objects;
+    //private ArrayList objects;
     private bool pause = false;
     private Vector2 velocity = new Vector2();
 
 	// Use this for initialization
 	void Start () {
+		pause = true;
 		if (!controllerPluggedIn){
 			verticalScale = transform.localScale.y;
 			horizontalScale = transform.localScale.x;
@@ -46,7 +47,8 @@ public class George : MonoBehaviour {
 		distToGround = collider2D.bounds.extents.y;
 		playerSpeed = globalPlayerSpeed;
 
-        objects = new ArrayList();
+
+        //objects = new ArrayList();
 	}
 	
 	// Update is called once per frame
@@ -57,13 +59,65 @@ public class George : MonoBehaviour {
 			horizontalScale = con.getSmoothSlider2()/scaleFactor;
 			
 			if(!powerSphere){ //-------------------CUBE---------------------
+
+
+				//SCALING Beginning
+				rotatedDirection = Mathf.Round (Mathf.Abs (Mathf.Sin (transform.eulerAngles.z * Mathf.Deg2Rad) )) == 1;
 				if (verticalScale < 0.5f){
 					verticalScale = 0.5f;
 				} 
 				if (horizontalScale < 0.5f){
 					horizontalScale = 0.5f;
 				}
-				transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
+				if(UpperCollison()&& SideCollision()){
+					if(horizontalScale < transform.localScale.x)
+						transform.localScale = new Vector3(horizontalScale, transform.localScale.y, 1);
+					if(verticalScale < transform.localScale.y)
+						transform.localScale = new Vector3(transform.localScale.x, verticalScale, 1);
+				}else if(UpperCollison() && SideCollision()){
+					if(rotatedDirection){
+						if(horizontalScale < transform.localScale.x){
+							transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
+						}
+						else {
+							transform.localScale = new Vector3(transform.localScale.x, verticalScale, 1);
+						}
+					}
+					else  {
+						if(verticalScale < transform.localScale.y){
+							transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
+						}
+						else {
+							transform.localScale = new Vector3(horizontalScale, transform.localScale.y, 1);
+						}
+					}
+				} else if(SideCollision() && !UpperCollison()){
+					if(rotatedDirection){
+						if(verticalScale < transform.localScale.y){
+							transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
+						}
+						else {
+							transform.localScale = new Vector3(horizontalScale, transform.localScale.y, 1);
+						}
+					}
+					else  {
+						if(horizontalScale < transform.localScale.x){
+							transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
+						}
+						else {
+							transform.localScale = new Vector3(transform.localScale.x, verticalScale, 1);
+						}
+					}
+
+				} else {
+					transform.localScale = new Vector3(horizontalScale,verticalScale,1);
+				}
+				//SCALING END
+
+
+				//transform.localScale = new Vector3(horizontalScale,verticalScale,1);
+
+
 				if(con.getUp() && IsGrounded()){
 					rigidbody2D.velocity = new Vector3(rigidbody2D.velocity.x,10 / georgeWeight,0);
 				}
@@ -86,8 +140,9 @@ public class George : MonoBehaviour {
 				}
 				
 			} else {//-------------------SPHERE---------------------
-				if (verticalScale > 0.5f){
-					transform.localScale = new Vector3(verticalScale, verticalScale, 1);
+				if (verticalScale > 0.5f ){
+					if(!UpperCollison() && !SideCollision() || verticalScale < transform.localScale.y)
+						transform.localScale = new Vector3(verticalScale, verticalScale, 1);
 				}
 				
 				if (con.getRight()){
@@ -122,11 +177,11 @@ public class George : MonoBehaviour {
 					rigidbody.velocity = new Vector3(rigidbody.velocity.x, 10 / georgeWeight,0);
 				}*/
 			}
-			
+
+
 		}
 		rigidbody2D.AddForce(new Vector2(0,-5));
-
-
+		distToGround = collider2D.bounds.extents.y;
 
 		}
 	void Update () {
@@ -212,7 +267,7 @@ public class George : MonoBehaviour {
 
 				}
 
-				if (Input.GetKey(KeyCode.P) && transform.localScale.x < 5){
+				if (Input.GetKey(KeyCode.P) && transform.localScale.x < 5 && !UpperCollison() && !SideCollision()){
 					verticalScale += 2f * Time.deltaTime;
 					horizontalScale += 2f * Time.deltaTime;
 					transform.localScale = new Vector3(horizontalScale, verticalScale, 1);
@@ -278,6 +333,13 @@ public class George : MonoBehaviour {
 	bool IsGrounded(){
 		return Physics2D.Raycast(transform.position, -Vector2.up, distToGround + 0.1f, 3);
 	}
+	bool UpperCollison(){
+		return Physics2D.Raycast(transform.position, Vector2.up, distToGround + 0.5f, 3);
+	}
+	bool SideCollision(){
+		return Physics2D.Raycast(transform.position, Vector2.right, distToGround + 0.3f, 3) 
+			&& Physics2D.Raycast(transform.position, -Vector2.right, distToGround + 0.3f, 3);
+	}
 
 	void OnTriggerEnter2D(Collider2D other){
 		if(other.gameObject.tag == "SpherePower" && !powerSphere){
@@ -289,8 +351,8 @@ public class George : MonoBehaviour {
 			transform.localScale = new Vector3(1,1,1);
 			gameObject.AddComponent("CircleCollider2D");
 			powerSphere = true;
-            other.gameObject.SetActive(false);
-            objects.Add(other.gameObject);
+            //other.gameObject.SetActive(false);
+            //objects.Add(other.gameObject);
 		}
 		if(other.gameObject.tag == "CubePower" && powerSphere){
 			GameObject square = GameObject.FindGameObjectWithTag("CubePower");
@@ -301,40 +363,54 @@ public class George : MonoBehaviour {
 			transform.localScale = new Vector3(1,1,1);
 			gameObject.AddComponent("BoxCollider2D");
 			powerSphere = false;
-            other.gameObject.SetActive(false);
-            objects.Add(other.gameObject);
+            //other.gameObject.SetActive(false);
+            //objects.Add(other.gameObject);
 		}
         if (other.gameObject.tag == "DeathZone"){
             OnDeath();
         }
+
 	}
+
+	void OnCollisionEnter2D(Collision2D other){
+		if (other.gameObject.tag == "Button") {
+			if(transform.localScale.x * transform.localScale.y > 10 && rigidbody2D.velocity.y < -5f){
+				other.gameObject.GetComponent<SpringJoint2D>().enabled = false;
+				other.gameObject.GetComponent<DistanceJoint2D>().distance = 0f;
+				GameObject door = GameObject.FindGameObjectWithTag("Finish");
+				door.transform.position = new Vector3(door.transform.position.x, door.transform.position.y +10f, 1);
+
+			}
+		}
+
+	}
+
 	float stay = 0.02f;
 	void OnTriggerStay2D(Collider2D other){
-		float windweight = transform.localScale.x * transform.localScale.y;
-		if (other.gameObject.tag == "WindBox")
+		if (other.gameObject.tag == "WindBox") {
 
-				rigidbody2D.AddForce (new Vector2 (-15, 0));
+						rigidbody2D.AddForce (new Vector2 (-15, 0));
 
-				if (!powerSphere ) {
-					if (playerSpeed > 0 && transform.localScale.x * transform.localScale.y < 10){
-					    playerSpeed -= stay;
-		    	    }
-                    else if (transform.localScale.x * transform.localScale.y > 10){
-			            playerSpeed = globalPlayerSpeed;
-			        }
-				} 
-				if (powerSphere) {
-					//rigidbody2D.AddForce (new Vector2 (-17 , 0));
-						if (playerSpeed > 0)
-								playerSpeed -= stay;
+						if (!powerSphere) {
+								if (playerSpeed > 0 && transform.localScale.x * transform.localScale.y < 10) {
+										playerSpeed -= stay;
+								} else if (transform.localScale.x * transform.localScale.y > 10) {
+										playerSpeed = globalPlayerSpeed;
+								}
+						} 
+						if (powerSphere) {
+								//rigidbody2D.AddForce (new Vector2 (-17 , 0));
+								if (playerSpeed > 0)
+										playerSpeed -= stay;
 				
-					//rigidbody2D.AddForce (new Vector2 (-40/(windweight) , 0));
-						/*rigidbody2D.AddForce (new Vector2 (-5, 0));
+								//rigidbody2D.AddForce (new Vector2 (-40/(windweight) , 0));
+								/*rigidbody2D.AddForce (new Vector2 (-5, 0));
 
 						if (playerSpeed > 3)
 							playerSpeed -= stay;*/
 		
-		}
+						}
+				}
 	}
 
 	void OnTriggerExit2D(Collider2D other){
@@ -352,10 +428,10 @@ public class George : MonoBehaviour {
         // reset the character's position to the spawnPoint
         transform.position = spawnPoint.position;
 
-        for (int i = 0; i < objects.Count; i++){
+        /*for (int i = 0; i < objects.Count; i++){
             ((GameObject)objects[i]).SetActive(true);
         }
-        objects.Clear();
+        objects.Clear();*/
         if (!controllerPluggedIn) transform.localScale = new Vector3(1, 1, 1);
 
         GameObject square = GameObject.FindGameObjectWithTag("CubePower");
