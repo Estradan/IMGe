@@ -17,7 +17,7 @@ public class Win : MonoBehaviour {
 		if (GUI.Button(new Rect(Screen.width/2 - ButtonWidth/2, Screen.height/2 - ButtonHeight/2, ButtonWidth,
 			ButtonHeight), "You Won!\n Press here to start again."))
 		{
-			
+
 			Application.LoadLevel(0);
 			
 		}

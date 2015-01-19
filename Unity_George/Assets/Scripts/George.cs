@@ -14,7 +14,7 @@ public class George : MonoBehaviour {
 	private bool powerSphere;
 	private bool leftOld=false, rightOld =false;
 	private bool rotatedDirection;
-
+	
 
 	public GameObject Controller;
 	public float scaleFactor=819f;
@@ -46,7 +46,6 @@ public class George : MonoBehaviour {
 		}
 		distToGround = collider2D.bounds.extents.y;
 		playerSpeed = globalPlayerSpeed;
-
 
         //objects = new ArrayList();
 	}
@@ -128,11 +127,17 @@ public class George : MonoBehaviour {
 				}
 				if(!con.getRight() && rightOld){
 					rightOld = false;
-					rigidbody2D.velocity = new Vector2 (1, rigidbody2D.velocity.y);
+					if(!IsGrounded() && RightCollison())
+						rigidbody2D.velocity = new Vector2 (0, rigidbody2D.velocity.y);
+					else
+						rigidbody2D.AddForce(new Vector2(playerSpeed,rigidbody2D.velocity.y)- rigidbody2D.velocity, ForceMode2D.Impulse);
 				}
 				if(con.getLeft()){
 					leftOld = true;
-					rigidbody2D.velocity = new Vector2 (-playerSpeed , rigidbody2D.velocity.y);
+					if(!IsGrounded() && LeftCollison())
+						rigidbody2D.velocity = new Vector2 (0, rigidbody2D.velocity.y);
+					else
+						rigidbody2D.AddForce(new Vector2(-playerSpeed,rigidbody2D.velocity.y) -rigidbody2D.velocity, ForceMode2D.Impulse);
 				}
 				if(!con.getLeft() &&leftOld){
 					leftOld = false;
@@ -185,7 +190,8 @@ public class George : MonoBehaviour {
 
 		}
 	void Update () {
-        if (!controllerPluggedIn){
+		//Debug.Log (rigidbody2D.velocity.x);
+		if (!controllerPluggedIn){
             if (Input.GetKey(KeyCode.Escape)){
                 pause = true;
                 rigidbody2D.isKinematic = true;
@@ -216,14 +222,22 @@ public class George : MonoBehaviour {
 		if(!controllerPluggedIn){
 			if(!powerSphere){//-------------------CUBE---------------------
 				if (Input.GetKey(KeyCode.D)){
-					rigidbody2D.velocity = new Vector2 (playerSpeed, rigidbody2D.velocity.y);
+
+					if(!IsGrounded() && RightCollison())
+						rigidbody2D.velocity = new Vector2 (0, rigidbody2D.velocity.y);
+					else
+						rigidbody2D.AddForce(new Vector2(playerSpeed,rigidbody2D.velocity.y)- rigidbody2D.velocity, ForceMode2D.Impulse);
 					//rigidbody2D.AddTorque(rotationSpeed);
 				}
 				if(Input.GetKeyUp(KeyCode.D)){
 					rigidbody2D.velocity = new Vector2 (1, rigidbody2D.velocity.y);
 				}
 				if (Input.GetKey(KeyCode.A)){
-					rigidbody2D.velocity = new Vector2 (-playerSpeed, rigidbody2D.velocity.y);
+					if(!IsGrounded() && LeftCollison())
+						rigidbody2D.velocity = new Vector2 (0, rigidbody2D.velocity.y);
+					else
+						rigidbody2D.AddForce(new Vector2(-playerSpeed,rigidbody2D.velocity.y) -rigidbody2D.velocity, ForceMode2D.Impulse);
+
 					//rigidbody2D.AddTorque(rotationSpeed);
 				}
 				if(Input.GetKeyUp(KeyCode.A)){
@@ -340,6 +354,12 @@ public class George : MonoBehaviour {
 		return Physics2D.Raycast(transform.position, Vector2.right, distToGround + 0.3f, 3) 
 			&& Physics2D.Raycast(transform.position, -Vector2.right, distToGround + 0.3f, 3);
 	}
+	bool RightCollison(){
+		return Physics2D.Raycast (transform.position, Vector2.right, distToGround + 0.08f, 3);
+	}
+	bool LeftCollison(){
+		return Physics2D.Raycast(transform.position, -Vector2.right, distToGround + 0.08f, 3);
+	}
 
 	void OnTriggerEnter2D(Collider2D other){
 		if(other.gameObject.tag == "SpherePower" && !powerSphere){
@@ -401,7 +421,7 @@ public class George : MonoBehaviour {
 						if (powerSphere) {
 								//rigidbody2D.AddForce (new Vector2 (-17 , 0));
 								if (playerSpeed > 0)
-										playerSpeed -= stay;
+										playerSpeed -= (stay +0.3f);
 				
 								//rigidbody2D.AddForce (new Vector2 (-40/(windweight) , 0));
 								/*rigidbody2D.AddForce (new Vector2 (-5, 0));
